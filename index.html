@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高校情報Ⅰ 動画のデータ量計算ドリル</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for Celebration Effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+        .math-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #6366f1;
+        }
+        .step-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <header class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+                    <i class="fa-solid fa-file-video text-2xl text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight leading-none">動画データ量計算ドリル</h1>
+                    <p class="text-xs text-indigo-100 mt-1 font-medium">高校情報Ⅰ デジタルデータの表現・動画メディアの計算</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <nav class="flex bg-black/20 p-1 rounded-xl backdrop-blur-sm text-sm font-semibold">
+                <button id="nav-quiz" onclick="switchTab('quiz')" class="px-4 py-1.5 rounded-lg transition duration-200 bg-white text-brand-700 shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> 練習問題
+                </button>
+                <button id="nav-sim" onclick="switchTab('sim')" class="px-4 py-1.5 rounded-lg transition duration-200 text-indigo-100 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> 計算シミュレーター
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- SCORE & GLOBAL SETTINGS BAR -->
+        <div class="grid md:grid-cols-12 gap-4">
+            <!-- Score Tracking Card -->
+            <div class="md:col-span-7 bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-2 text-sm text-slate-600 font-bold">
+                    <i class="fa-solid fa-trophy text-amber-500 text-base"></i>
+                    <span>学習スコア:</span>
+                </div>
+                <div class="flex items-center gap-4 text-xs md:text-sm">
+                    <div class="text-center px-2">
+                        <span class="block text-slate-400 text-xs">正解 / 挑戦</span>
+                        <strong class="text-slate-800 text-base"><span id="score-correct">0</span> / <span id="score-total">0</span></strong>
+                    </div>
+                    <div class="text-center px-2 border-l border-slate-200">
+                        <span class="block text-slate-400 text-xs">正答率</span>
+                        <strong class="text-brand-600 text-base"><span id="score-rate">0</span>%</strong>
+                    </div>
+                    <div class="text-center px-2 border-l border-slate-200">
+                        <span class="block text-slate-400 text-xs">連続正解</span>
+                        <strong class="text-orange-500 text-base flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-fire"></i> <span id="score-streak">0</span>
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standard Switcher Card -->
+            <div class="md:col-span-5 bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 text-xs text-slate-600 font-bold shrink-0">
+                    <i class="fa-solid fa-gear text-brand-500 text-sm"></i>
+                    <span>単位換算基準:</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <label class="flex items-center gap-1 cursor-pointer bg-slate-100 px-2.5 py-1.5 rounded-lg hover:bg-slate-200/70 transition">
+                        <input type="radio" name="unitStandard" value="1000" checked onchange="updateSettings()" class="text-brand-600 focus:ring-brand-500">
+                        <span class="font-bold text-slate-700">1KB = 1000B</span>
+                    </label>
+                    <label class="flex items-center gap-1 cursor-pointer bg-slate-100 px-2.5 py-1.5 rounded-lg hover:bg-slate-200/70 transition">
+                        <input type="radio" name="unitStandard" value="1024" onchange="updateSettings()" class="text-brand-600 focus:ring-brand-500">
+                        <span class="font-bold text-slate-700">1KB = 1024B</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 1: PRACTICE QUIZ MODE -->
+        <div id="tab-quiz" class="space-y-6">
+            
+            <!-- Controls & Level Selector -->
+            <div class="grid md:grid-cols-3 gap-4">
+                <button onclick="generateQuestion('easy')" id="lvl-easy" class="lvl-btn p-4 rounded-2xl border-2 text-left transition relative overflow-hidden bg-white border-brand-500 shadow-md ring-2 ring-brand-500/20">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-seedling text-emerald-500"></i> 初級
+                        </span>
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">基本問題</span>
+                    </div>
+                    <p class="text-xs text-slate-500">映像のみ・非圧縮・シンプルな基本計算問題。</p>
+                </button>
+
+                <button onclick="generateQuestion('medium')" id="lvl-medium" class="lvl-btn p-4 rounded-2xl border-2 text-left transition relative overflow-hidden bg-white border-slate-200 hover:border-brand-300">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-500"></i> 中級
+                        </span>
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">標準問題</span>
+                    </div>
+                    <p class="text-xs text-slate-500">データ圧縮率（1/10など）を考慮した定期テストレベル。</p>
+                </button>
+
+                <button onclick="generateQuestion('hard')" id="lvl-hard" class="lvl-btn p-4 rounded-2xl border-2 text-left transition relative overflow-hidden bg-white border-slate-200 hover:border-brand-300">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-crown text-rose-500"></i> 上級
+                        </span>
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">応用問題</span>
+                    </div>
+                    <p class="text-xs text-slate-500">音声トラック付き（kbps指定）の総合計算問題。</p>
+                </button>
+            </div>
+
+            <!-- QUESTION CARD -->
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200/80 relative">
+                <!-- Question Header -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <span id="q-level-badge" class="px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                            初級
+                        </span>
+                        <span class="text-slate-400 font-bold text-sm">問題 <span id="q-number">1</span></span>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleHint()" class="text-sm font-bold text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-lightbulb"></i> ヒントを見る
+                        </button>
+                        <button onclick="generateQuestion(currentLevel)" class="text-sm font-bold text-brand-600 hover:text-brand-800 flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-rotate-right"></i> 新しい問題
+                        </button>
+                    </div>
+                </div>
+
+                <!-- HINT BOX (HIDDEN BY DEFAULT) -->
+                <div id="hint-box" class="hidden mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-200 text-amber-900 text-xs md:text-sm space-y-2">
+                    <div class="font-bold flex items-center gap-2 text-amber-800 text-base">
+                        <i class="fa-solid fa-lightbulb"></i> 計算公式ヒント
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-amber-950 font-medium leading-relaxed">
+                        <li><strong>1画面の容量:</strong> 解像度（横 × 縦） × 色深度(bit) ÷ 8 ＝ Byte</li>
+                        <li><strong>1秒間の容量:</strong> 1画面の容量(Byte) × フレームレート(fps)</li>
+                        <li><strong>全体容量:</strong> 1秒の容量 × 時間(秒) ÷ 圧縮率（圧縮がある場合）</li>
+                        <li><strong>単位換算:</strong> Byte ÷ 1000（または1024）＝ KB, さらに ÷ 1000 ＝ MB</li>
+                    </ul>
+                </div>
+
+                <!-- Question Text -->
+                <div class="mb-8">
+                    <h2 id="q-statement" class="text-lg md:text-xl font-bold text-slate-800 leading-relaxed mb-6">
+                        <!-- Dynamic Question Text -->
+                    </h2>
+
+                    <!-- Given Conditions Badge List -->
+                    <div class="bg-indigo-50/50 rounded-2xl p-4 md:p-5 border border-indigo-100/80">
+                        <h3 class="text-xs font-extrabold text-brand-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check"></i> 与えられた条件
+                        </h3>
+                        <div id="q-conditions" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 text-sm">
+                            <!-- Dynamic Conditions Badges -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Answer Input Form -->
+                <form id="answer-form" onsubmit="checkAnswer(event)" class="bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-bold text-slate-700">
+                            <i class="fa-solid fa-calculator text-brand-500 mr-1"></i> 解答を入力してください
+                        </label>
+                        <span class="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-100" id="rounding-instruction">
+                            小数第2位を四捨五入して小数第1位まで指定
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap md:flex-nowrap gap-3 items-center">
+                        <div class="relative flex-grow">
+                            <input type="number" id="user-answer" step="any" required placeholder="例: 144.0"
+                                class="w-full px-4 py-3 text-lg font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
+                        </div>
+                        <div class="w-32">
+                            <input type="text" id="user-unit-display" readonly value="MB" class="w-full px-3 py-3 text-center text-base font-extrabold rounded-xl border border-slate-300 bg-slate-100 text-slate-700 cursor-not-allowed">
+                        </div>
+                        <button type="submit" id="submit-btn" class="w-full md:w-auto px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-black text-base rounded-xl shadow-md shadow-brand-500/20 transition hover:-translate-y-0.5 active:translate-y-0">
+                            回答する
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Feedback & Steps Display -->
+                <div id="feedback-section" class="mt-8 hidden space-y-6">
+                    <!-- Result Status Banner -->
+                    <div id="result-banner" class="p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div id="result-icon-bg" class="w-12 h-12 rounded-full flex items-center justify-center text-2xl text-white shrink-0"></div>
+                            <div>
+                                <h3 id="result-title" class="font-black text-xl"></h3>
+                                <p id="result-desc" class="text-sm mt-0.5"></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Next Question Button inside Feedback -->
+                        <button id="next-q-btn" onclick="nextQuestion()" class="w-full sm:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-black text-sm md:text-base rounded-xl shadow-md transition flex items-center justify-center gap-2 shrink-0">
+                            <span>次の問題へ進む</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Step-by-Step Explanation Container -->
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+                        <div class="bg-slate-100/80 px-5 py-3.5 border-b border-slate-200 flex justify-between items-center">
+                            <h3 class="font-extrabold text-slate-800 text-sm md:text-base flex items-center gap-2">
+                                <i class="fa-solid fa-graduation-cap text-brand-600"></i> ステップバイステップ計算プロセス解説
+                            </h3>
+                            <span class="text-xs text-slate-500 font-bold bg-white px-2.5 py-1 rounded-md border border-slate-200">1 Byte = 8 bits</span>
+                        </div>
+                        
+                        <div id="explanation-steps" class="p-5 md:p-6 space-y-6">
+                            <!-- Dynamic Steps Output -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: INTERACTIVE SIMULATOR MODE -->
+        <div id="tab-sim" class="hidden space-y-6">
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200/80">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 mb-1">リアルタイム動画データ量シミュレーター</h2>
+                    <p class="text-sm text-slate-500">各パラメータを変更して、画質やフレームレートがデータサイズに与える影響を体験しましょう。</p>
+                </div>
+
+                <div class="grid lg:grid-cols-12 gap-8">
+                    <!-- Controls Column -->
+                    <div class="lg:col-span-7 space-y-5">
+                        <!-- Preset selector -->
+                        <div>
+                            <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">解像度プリセット</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button onclick="applySimPreset('sd')" class="py-2 px-3 text-xs font-bold rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50 text-slate-700 transition">SD 480p</button>
+                                <button onclick="applySimPreset('hd')" class="py-2 px-3 text-xs font-bold rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50 text-slate-700 transition">HD 720p</button>
+                                <button onclick="applySimPreset('fhd')" class="py-2 px-3 text-xs font-bold rounded-xl border border-brand-500 bg-brand-50 text-brand-700 transition">Full HD 1080p</button>
+                                <button onclick="applySimPreset('4k')" class="py-2 px-3 text-xs font-bold rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50 text-slate-700 transition">4K Ultra HD</button>
+                            </div>
+                        </div>
+
+                        <!-- Resolution -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                    <i class="fa-solid fa-expand text-brand-500"></i> 解像度 (画素数)
+                                </label>
+                                <span id="sim-res-val" class="text-sm font-bold text-brand-600 bg-white px-2.5 py-1 rounded-md border text-right">1920 × 1080 (2,073,600 px)</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <span class="text-xs text-slate-500 block mb-1">横 (px)</span>
+                                    <input type="number" id="sim-width" value="1920" oninput="calculateSim()" class="w-full px-3 py-1.5 text-sm font-bold rounded-lg border">
+                                </div>
+                                <div>
+                                    <span class="text-xs text-slate-500 block mb-1">縦 (px)</span>
+                                    <input type="number" id="sim-height" value="1080" oninput="calculateSim()" class="w-full px-3 py-1.5 text-sm font-bold rounded-lg border">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Color Depth -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                    <i class="fa-solid fa-palette text-brand-500"></i> 色深度 (1画素のビット数)
+                                </label>
+                                <span id="sim-bit-val" class="text-sm font-bold text-brand-600">24 bit (フルカラー)</span>
+                            </div>
+                            <input type="range" id="sim-bit" min="8" max="32" step="8" value="24" oninput="calculateSim()" class="w-full accent-brand-600 cursor-pointer">
+                            <div class="flex justify-between text-xs text-slate-400 font-medium">
+                                <span>8 bit</span>
+                                <span>16 bit</span>
+                                <span>24 bit</span>
+                                <span>32 bit</span>
+                            </div>
+                        </div>
+
+                        <!-- Frame Rate & Time -->
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+                                <label class="text-sm font-bold text-slate-700 block flex items-center gap-2">
+                                    <i class="fa-solid fa-film text-brand-500"></i> フレームレート
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <input type="range" id="sim-fps" min="1" max="120" value="30" oninput="calculateSim()" class="w-full accent-brand-600 cursor-pointer">
+                                    <span id="sim-fps-val" class="text-sm font-bold text-brand-600 w-16 text-right">30 fps</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+                                <label class="text-sm font-bold text-slate-700 block flex items-center gap-2">
+                                    <i class="fa-regular fa-clock text-brand-500"></i> 長さ (秒)
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="sim-sec" value="60" min="1" max="3600" oninput="calculateSim()" class="w-full px-3 py-1 text-sm font-bold rounded-lg border">
+                                    <span class="text-sm font-bold text-slate-600">秒</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Compression Rate -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                    <i class="fa-solid fa-file-zipper text-brand-500"></i> 圧縮率（非圧縮〜1/100）
+                                </label>
+                                <span id="sim-comp-val" class="text-sm font-bold text-brand-600">1/1 (非圧縮)</span>
+                            </div>
+                            <input type="range" id="sim-comp" min="1" max="100" value="1" oninput="calculateSim()" class="w-full accent-brand-600 cursor-pointer">
+                        </div>
+
+                    </div>
+
+                    <!-- Result Cards Column -->
+                    <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
+                        <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 rounded-3xl shadow-xl space-y-6">
+                            <h3 class="text-xs font-bold text-indigo-300 uppercase tracking-widest flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie"></i> 計算結果プレビュー
+                            </h3>
+
+                            <div class="border-b border-indigo-800/60 pb-6">
+                                <span class="text-xs text-indigo-300 font-medium block mb-1">推定動画データサイズ (圧縮適用後)</span>
+                                <div class="text-3xl md:text-4xl font-black text-amber-400 tracking-tight" id="sim-total-megabytes">
+                                    -- MB
+                                </div>
+                                <p class="text-xs text-indigo-200/80 mt-2" id="sim-total-gigabytes">(-- GB)</p>
+                            </div>
+
+                            <div class="space-y-3 text-xs md:text-sm">
+                                <div class="flex justify-between items-center text-indigo-200">
+                                    <span>1フレーム (1画面) :</span>
+                                    <span class="font-bold text-white" id="sim-frame-size">-- KB</span>
+                                </div>
+                                <div class="flex justify-between items-center text-indigo-200">
+                                    <span>1秒間 (映像のみ) :</span>
+                                    <span class="font-bold text-white" id="sim-second-size">-- MB</span>
+                                </div>
+                                <div class="flex justify-between items-center text-indigo-200">
+                                    <span>総画素数 :</span>
+                                    <span class="font-bold text-white" id="sim-total-pixels">-- px</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200/80 text-amber-900 text-xs leading-relaxed space-y-1">
+                            <p class="font-extrabold flex items-center gap-1 text-amber-800">
+                                <i class="fa-solid fa-lightbulb"></i> 学習のポイント
+                            </p>
+                            <p>縦横の解像度をそれぞれ2倍にすると、画素数は<strong class="text-amber-950 underline">4倍</strong>（$2 \times 2$）になるため、データ量も4倍になります！</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto px-4 space-y-2">
+            <p class="font-medium text-slate-600">高校情報Ⅰ「デジタルデータの表現・動画のデータ量計算」学習用アプリケーション</p>
+            <p>© 高校情報Ⅰ 実践教材</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // State management
+        let currentLevel = 'easy';
+        let currentQuestion = null;
+        let questionCounter = 1;
+        let unitDivisor = 1000; // Default 1000 Bytes = 1 KB
+        let isAnswerSubmitted = false;
+
+        // Score tracking
+        let scoreStats = {
+            total: 0,
+            correct: 0,
+            streak: 0
+        };
+
+        const RESOLUTIONS = [
+            { name: "SD (640 × 480)", w: 640, h: 480 },
+            { name: "HD (1280 × 720)", w: 1280, h: 720 },
+            { name: "Full HD (1920 × 1080)", w: 1920, h: 1080 },
+            { name: "4K (3840 × 2160)", w: 3840, h: 2160 },
+            { name: "カスタム (800 × 600)", w: 800, h: 600 }
+        ];
+
+        const FRAME_RATES = [15, 24, 30, 60];
+        const BIT_DEPTHS = [8, 16, 24, 32];
+        const DURATIONS = [10, 20, 30, 60, 120]; 
+        const COMPRESS_RATES = [5, 10, 20, 50]; 
+
+        function switchTab(tab) {
+            const quizTab = document.getElementById('tab-quiz');
+            const simTab = document.getElementById('tab-sim');
+            const navQuiz = document.getElementById('nav-quiz');
+            const navSim = document.getElementById('nav-sim');
+
+            if (tab === 'quiz') {
+                quizTab.classList.remove('hidden');
+                simTab.classList.add('hidden');
+                navQuiz.className = "px-4 py-1.5 rounded-lg transition duration-200 bg-white text-brand-700 shadow-sm flex items-center gap-2 font-bold";
+                navSim.className = "px-4 py-1.5 rounded-lg transition duration-200 text-indigo-100 hover:text-white flex items-center gap-2 font-semibold";
+            } else {
+                quizTab.classList.add('hidden');
+                simTab.classList.remove('hidden');
+                navSim.className = "px-4 py-1.5 rounded-lg transition duration-200 bg-white text-brand-700 shadow-sm flex items-center gap-2 font-bold";
+                navQuiz.className = "px-4 py-1.5 rounded-lg transition duration-200 text-indigo-100 hover:text-white flex items-center gap-2 font-semibold";
+                calculateSim();
+            }
+        }
+
+        function updateSettings() {
+            const selectedDivisor = document.querySelector('input[name="unitStandard"]:checked').value;
+            unitDivisor = parseInt(selectedDivisor, 10);
+            
+            if (currentQuestion) {
+                recalculateQuestionAnswer();
+                if (!document.getElementById('feedback-section').classList.contains('hidden')) {
+                    displayStepByStepExplanation();
+                }
+            }
+            calculateSim();
+        }
+
+        function toggleHint() {
+            const hintBox = document.getElementById('hint-box');
+            hintBox.classList.toggle('hidden');
+        }
+
+        function generateQuestion(level = 'easy') {
+            currentLevel = level;
+            updateLevelButtonUI(level);
+
+            // Reset UI states
+            isAnswerSubmitted = false;
+            document.getElementById('feedback-section').classList.add('hidden');
+            document.getElementById('hint-box').classList.add('hidden');
+            
+            const answerInput = document.getElementById('user-answer');
+            answerInput.value = '';
+            answerInput.disabled = false;
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            const res = RESOLUTIONS[Math.floor(Math.random() * (level === 'easy' ? 3 : RESOLUTIONS.length))];
+            const fps = FRAME_RATES[Math.floor(Math.random() * FRAME_RATES.length)];
+            const bit = BIT_DEPTHS[Math.floor(Math.random() * BIT_DEPTHS.length)];
+            const sec = DURATIONS[Math.floor(Math.random() * DURATIONS.length)];
+            
+            let compress = 1;
+            let audioKBps = 0;
+
+            if (level === 'medium') {
+                compress = COMPRESS_RATES[Math.floor(Math.random() * COMPRESS_RATES.length)];
+            } else if (level === 'hard') {
+                compress = COMPRESS_RATES[Math.floor(Math.random() * COMPRESS_RATES.length)];
+                audioKBps = [128, 192, 256][Math.floor(Math.random() * 3)];
+            }
+
+            currentQuestion = {
+                width: res.w,
+                height: res.h,
+                resName: res.name,
+                fps: fps,
+                bitDepth: bit,
+                duration: sec,
+                compress: compress,
+                audioKBps: audioKBps,
+                targetUnit: 'MB'
+            };
+
+            recalculateQuestionAnswer();
+            renderQuestionCard();
+
+            // Auto-focus input field
+            setTimeout(() => {
+                answerInput.focus();
+            }, 50);
+        }
+
+        function nextQuestion() {
+            generateQuestion(currentLevel);
+        }
+
+        function updateLevelButtonUI(level) {
+            const buttons = {
+                easy: document.getElementById('lvl-easy'),
+                medium: document.getElementById('lvl-medium'),
+                hard: document.getElementById('lvl-hard')
+            };
+
+            Object.keys(buttons).forEach(key => {
+                if (key === level) {
+                    buttons[key].className = "lvl-btn p-4 rounded-2xl border-2 text-left transition relative overflow-hidden bg-white border-brand-500 shadow-md ring-2 ring-brand-500/20";
+                } else {
+                    buttons[key].className = "lvl-btn p-4 rounded-2xl border-2 text-left transition relative overflow-hidden bg-white border-slate-200 hover:border-brand-300 opacity-80";
+                }
+            });
+
+            const badge = document.getElementById('q-level-badge');
+            if (level === 'easy') {
+                badge.className = "px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800";
+                badge.textContent = "初級 (非圧縮)";
+            } else if (level === 'medium') {
+                badge.className = "px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800";
+                badge.textContent = "中級 (圧縮考慮)";
+            } else {
+                badge.className = "px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-rose-100 text-rose-800";
+                badge.textContent = "上級 (音声トラック含)";
+            }
+        }
+
+        function recalculateQuestionAnswer() {
+            if (!currentQuestion) return;
+
+            const q = currentQuestion;
+            q.pixels = q.width * q.height;
+            q.frameBits = q.pixels * q.bitDepth;
+            q.frameBytes = q.frameBits / 8;
+
+            q.videoBytesPerSec = q.frameBytes * q.fps;
+            q.rawVideoTotalBytes = q.videoBytesPerSec * q.duration;
+            q.compressedVideoTotalBytes = q.rawVideoTotalBytes / q.compress;
+
+            q.audioTotalBytes = (q.audioKBps * 1000 / 8) * q.duration;
+            q.totalBytes = q.compressedVideoTotalBytes + q.audioTotalBytes;
+
+            q.totalKB = q.totalBytes / unitDivisor;
+            q.totalMB = q.totalKB / unitDivisor;
+            q.totalGB = q.totalMB / unitDivisor;
+
+            if (q.totalMB < 1) {
+                q.targetUnit = 'KB';
+                q.rawTargetVal = q.totalKB;
+            } else if (q.totalMB >= 1000) {
+                q.targetUnit = 'GB';
+                q.rawTargetVal = q.totalGB;
+            } else {
+                q.targetUnit = 'MB';
+                q.rawTargetVal = q.totalMB;
+            }
+
+            // Rounded value to 1 decimal place (e.g. 144.2)
+            q.roundedTargetVal = Math.round(q.rawTargetVal * 10) / 10;
+        }
+
+        function renderQuestionCard() {
+            const q = currentQuestion;
+            document.getElementById('q-number').textContent = questionCounter;
+
+            let text = `解像度 <strong>${q.width} × ${q.height}</strong> ピクセル、色深度 <strong>${q.bitDepth} bit</strong>、フレームレート <strong>${q.fps} fps</strong> の動画があります。`;
+            text += `この動画 <strong>${q.duration} 秒間</strong> のデータ量は約何 <strong>${q.targetUnit}</strong> になるか計算しなさい。`;
+
+            if (q.compress > 1) {
+                text += `<br><span class="text-brand-600 font-medium">（※ 動画データは 1 / ${q.compress} に圧縮されているものとします）</span>`;
+            }
+
+            if (q.audioKBps > 0) {
+                text += `<br><span class="text-rose-600 font-medium">（※ ビットレート ${q.audioKBps} kbps の音声トラックが含まれているものとします）</span>`;
+            }
+
+            document.getElementById('q-statement').innerHTML = text;
+
+            const condContainer = document.getElementById('q-conditions');
+            const divisorLabel = unitDivisor === 1000 ? '1KB = 1,000B' : '1KB = 1,024B';
+
+            let condsHTML = `
+                <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                    <span class="text-xs text-slate-400 block">解像度</span>
+                    <strong class="text-slate-700">${q.width} × ${q.height} px</strong>
+                </div>
+                <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                    <span class="text-xs text-slate-400 block">色深度</span>
+                    <strong class="text-slate-700">${q.bitDepth} bit (${q.bitDepth / 8} Byte)</strong>
+                </div>
+                <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                    <span class="text-xs text-slate-400 block">フレームレート</span>
+                    <strong class="text-slate-700">${q.fps} fps</strong>
+                </div>
+                <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                    <span class="text-xs text-slate-400 block">秒数</span>
+                    <strong class="text-slate-700">${q.duration} 秒</strong>
+                </div>
+            `;
+
+            if (q.compress > 1) {
+                condsHTML += `
+                    <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                        <span class="text-xs text-slate-400 block">圧縮率</span>
+                        <strong class="text-brand-600">1 / ${q.compress}</strong>
+                    </div>
+                `;
+            }
+
+            if (q.audioKBps > 0) {
+                condsHTML += `
+                    <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                        <span class="text-xs text-slate-400 block">音声</span>
+                        <strong class="text-rose-600">${q.audioKBps} kbps</strong>
+                    </div>
+                `;
+            }
+
+            condsHTML += `
+                <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm">
+                    <span class="text-xs text-slate-400 block">単位換算基準</span>
+                    <strong class="text-indigo-600">${divisorLabel}</strong>
+                </div>
+            `;
+
+            condContainer.innerHTML = condsHTML;
+            document.getElementById('user-unit-display').value = q.targetUnit;
+        }
+
+        function checkAnswer(e) {
+            if (e) e.preventDefault();
+            if (isAnswerSubmitted) return;
+
+            const q = currentQuestion;
+            const inputElem = document.getElementById('user-answer');
+            const userVal = parseFloat(inputElem.value);
+
+            if (isNaN(userVal)) return;
+
+            isAnswerSubmitted = true;
+
+            // Verification with tolerance (±1% tolerance or rounded equality)
+            const exactTarget = q.rawTargetVal;
+            const roundedTarget = q.roundedTargetVal;
+            
+            const diffRatio = Math.abs(userVal - exactTarget) / exactTarget;
+            const isCorrect = diffRatio < 0.015 || Math.abs(userVal - roundedTarget) <= 0.1;
+
+            // Score update
+            scoreStats.total += 1;
+            if (isCorrect) {
+                scoreStats.correct += 1;
+                scoreStats.streak += 1;
+                // Launch Confetti Effect
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            } else {
+                scoreStats.streak = 0;
+            }
+            updateScoreUI();
+
+            // Disable input and submit button after answering
+            inputElem.disabled = true;
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Banner Display
+            const banner = document.getElementById('result-banner');
+            const iconBg = document.getElementById('result-icon-bg');
+            const title = document.getElementById('result-title');
+            const desc = document.getElementById('result-desc');
+
+            if (isCorrect) {
+                banner.className = "p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4 bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-sm";
+                iconBg.className = "w-12 h-12 rounded-full flex items-center justify-center text-2xl text-white bg-emerald-500 shrink-0";
+                iconBg.innerHTML = '<i class="fa-solid fa-check"></i>';
+                title.textContent = "素晴らしい！正解です！";
+                desc.textContent = `正解は ${roundedTarget} ${q.targetUnit} です。解答の計算プロセスを復習しましょう。`;
+            } else {
+                banner.className = "p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4 bg-rose-50 border border-rose-200 text-rose-900 shadow-sm";
+                iconBg.className = "w-12 h-12 rounded-full flex items-center justify-center text-2xl text-white bg-rose-500 shrink-0";
+                iconBg.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                title.textContent = "残念、不正解です。";
+                desc.textContent = `あなたの解答: ${userVal} ${q.targetUnit} ➔ 正しい解答: 約 ${roundedTarget} ${q.targetUnit}`;
+            }
+
+            displayStepByStepExplanation();
+            document.getElementById('feedback-section').classList.remove('hidden');
+            
+            // Move focus to Next Question Button for quick Enter key transition
+            setTimeout(() => {
+                const nextBtn = document.getElementById('next-q-btn');
+                if (nextBtn) nextBtn.focus();
+            }, 100);
+
+            // Increment Question Counter for next generate
+            questionCounter++;
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-correct').textContent = scoreStats.correct;
+            document.getElementById('score-total').textContent = scoreStats.total;
+            const rate = scoreStats.total > 0 ? Math.round((scoreStats.correct / scoreStats.total) * 100) : 0;
+            document.getElementById('score-rate').textContent = rate;
+            document.getElementById('score-streak').textContent = scoreStats.streak;
+        }
+
+        function displayStepByStepExplanation() {
+            const q = currentQuestion;
+            const container = document.getElementById('explanation-steps');
+            const divLabel = unitDivisor.toLocaleString();
+
+            let stepsHTML = '';
+
+            // STEP 1: 1 Frame
+            stepsHTML += `
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="step-badge bg-brand-500 text-white text-xs">1</span>
+                        <h4 class="font-bold text-slate-800 text-sm md:text-base">1フレーム（静止画1枚）あたりのデータ量を計算</h4>
+                    </div>
+                    <div class="pl-9 space-y-1.5 text-xs md:text-sm text-slate-600">
+                        <p>解像度（画素数）と色深度（1画素あたりのビット数）から1画面の容量を求めます。</p>
+                        <div class="math-box p-3 rounded-xl font-mono text-slate-800 space-y-1">
+                            <p>総画素数 = ${q.width} × ${q.height} = <strong>${q.pixels.toLocaleString()} 画素 (px)</strong></p>
+                            <p>1フレーム (bit) = ${q.pixels.toLocaleString()} px × ${q.bitDepth} bit = ${q.frameBits.toLocaleString()} bit</p>
+                            <p>1フレーム (Byte) = ${q.frameBits.toLocaleString()} bit ÷ 8 = <strong>${q.frameBytes.toLocaleString()} Byte</strong></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // STEP 2: 1 Second Video
+            stepsHTML += `
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="step-badge bg-brand-500 text-white text-xs">2</span>
+                        <h4 class="font-bold text-slate-800 text-sm md:text-base">1秒間（映像のみ）のデータ量を計算</h4>
+                    </div>
+                    <div class="pl-9 space-y-1.5 text-xs md:text-sm text-slate-600">
+                        <p>1秒間にはフレームレート (${q.fps} fps) の数だけ画像が連続再生されます。</p>
+                        <div class="math-box p-3 rounded-xl font-mono text-slate-800 space-y-1">
+                            <p>1秒間 (Byte) = ${q.frameBytes.toLocaleString()} Byte × ${q.fps} fps = <strong>${q.videoBytesPerSec.toLocaleString()} Byte/秒</strong></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // STEP 3: Total Duration Video
+            stepsHTML += `
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="step-badge bg-brand-500 text-white text-xs">3</span>
+                        <h4 class="font-bold text-slate-800 text-sm md:text-base">動画全体（${q.duration}秒間）の非圧縮データ量を計算</h4>
+                    </div>
+                    <div class="pl-9 space-y-1.5 text-xs md:text-sm text-slate-600">
+                        <div class="math-box p-3 rounded-xl font-mono text-slate-800 space-y-1">
+                            <p>全体 (Byte) = ${q.videoBytesPerSec.toLocaleString()} Byte/秒 × ${q.duration} 秒 = <strong>${q.rawVideoTotalBytes.toLocaleString()} Byte</strong></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // STEP 4: Compression
+            if (q.compress > 1) {
+                stepsHTML += `
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="step-badge bg-amber-500 text-white text-xs">4</span>
+                            <h4 class="font-bold text-slate-800 text-sm md:text-base">圧縮率 (1 / ${q.compress}) を適用</h4>
+                        </div>
+                        <div class="pl-9 space-y-1.5 text-xs md:text-sm text-slate-600">
+                            <div class="math-box p-3 rounded-xl font-mono text-slate-800 space-y-1 border-amber-500">
+                                <p>圧縮後 (Byte) = ${q.rawVideoTotalBytes.toLocaleString()} Byte ÷ ${q.compress} = <strong>${q.compressedVideoTotalBytes.toLocaleString()} Byte</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // STEP 5: Audio
+            if (q.audioKBps > 0) {
+                stepsHTML += `
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="step-badge bg-rose-500 text-white text-xs">5</span>
+                            <h4 class="font-bold text-slate-800 text-sm md:text-base">音声データ (${q.audioKBps} kbps) を加算</h4>
+                        </div>
+                        <div class="pl-9 space-y-1.5 text-xs md:text-sm text-slate-600">
+                            <div class="math-box p-3 rounded-xl font-mono text-slate-800 space-y-1 border-rose-500">
+                                <p>音声1秒分 (Byte) = (${q.audioKBps} × 1000 bit) ÷ 8 = ${(q.audioKBps * 1000 / 8).toLocaleString()} Byte/秒</p>
+                                <p>音声全体 (Byte) = ${(q.audioKBps * 1000 / 8).toLocaleString()} × ${q.duration} 秒 = <strong>${q.audioTotalBytes.toLocaleString()} Byte</strong></p>
+                                <p>映像＋音声合計 = ${q.compressedVideoTotalBytes.toLocaleString()} + ${q.audioTotalBytes.toLocaleString()} = <strong>${q.totalBytes.toLocaleString()} Byte</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // STEP FINAL: Unit Conversion
+            stepsHTML += `
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="step-badge bg-indigo-600 text-white text-xs"><i class="fa-solid fa-flag-checkered"></i></span>
+                        <h4 class="font-bold text-slate-800 text-sm md:text-base">単位換算 (Byte ➔ KB ➔ MB ➔ GB)</h4>
+                    </div>
+                    <div class="pl-9 space-y-1.5 text-xs md:text-sm text-slate-600">
+                        <p>設定中の換算基準: 1 KB = ${divLabel} B</p>
+                        <div class="bg-indigo-50/70 p-3 rounded-xl font-mono text-indigo-950 space-y-1 font-bold border border-indigo-200">
+                            <p>KB換算: ${q.totalBytes.toLocaleString()} B ÷ ${divLabel} = ${q.totalKB.toLocaleString(undefined, {maximumFractionDigits:2})} KB</p>
+                            <p>MB換算: ${q.totalKB.toLocaleString(undefined, {maximumFractionDigits:2})} KB ÷ ${divLabel} = ${q.totalMB.toLocaleString(undefined, {maximumFractionDigits:2})} MB</p>
+                            <p class="text-base text-brand-700 font-extrabold pt-1 border-t border-indigo-200">
+                                解答（四捨五入指定後）: ${q.roundedTargetVal} ${q.targetUnit}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = stepsHTML;
+        }
+
+        function calculateSim() {
+            const width = parseInt(document.getElementById('sim-width').value) || 0;
+            const height = parseInt(document.getElementById('sim-height').value) || 0;
+            const bitDepth = parseInt(document.getElementById('sim-bit').value);
+            const fps = parseInt(document.getElementById('sim-fps').value);
+            const sec = parseInt(document.getElementById('sim-sec').value) || 0;
+            const compress = parseInt(document.getElementById('sim-comp').value);
+
+            document.getElementById('sim-res-val').textContent = `${width} × ${height} (${(width * height).toLocaleString()} px)`;
+            document.getElementById('sim-bit-val').textContent = `${bitDepth} bit (${bitDepth / 8} Byte)`;
+            document.getElementById('sim-fps-val').textContent = `${fps} fps`;
+            document.getElementById('sim-comp-val').textContent = compress === 1 ? "1/1 (非圧縮)" : `1/${compress} 圧縮`;
+
+            const totalPixels = width * height;
+            const frameBytes = (totalPixels * bitDepth) / 8;
+            const secondBytes = frameBytes * fps;
+            const rawTotalBytes = secondBytes * sec;
+            const compressedBytes = rawTotalBytes / compress;
+
+            const frameKB = frameBytes / unitDivisor;
+            const secondMB = secondBytes / (unitDivisor * unitDivisor);
+            const totalMB = compressedBytes / (unitDivisor * unitDivisor);
+            const totalGB = totalMB / unitDivisor;
+
+            document.getElementById('sim-frame-size').textContent = `${frameKB.toLocaleString(undefined, {maximumFractionDigits: 1})} KB`;
+            document.getElementById('sim-second-size').textContent = `${secondMB.toLocaleString(undefined, {maximumFractionDigits: 1})} MB`;
+            document.getElementById('sim-total-pixels').textContent = `${totalPixels.toLocaleString()} px`;
+
+            document.getElementById('sim-total-megabytes').textContent = `${totalMB.toLocaleString(undefined, {maximumFractionDigits: 2})} MB`;
+            document.getElementById('sim-total-gigabytes').textContent = `(${totalGB.toLocaleString(undefined, {maximumFractionDigits: 3})} GB)`;
+        }
+
+        function applySimPreset(presetKey) {
+            const presets = {
+                sd: { w: 640, h: 480, fps: 30, bit: 24, comp: 1 },
+                hd: { w: 1280, h: 720, fps: 30, bit: 24, comp: 1 },
+                fhd: { w: 1920, h: 1080, fps: 30, bit: 24, comp: 1 },
+                '4k': { w: 3840, h: 2160, fps: 60, bit: 24, comp: 1 }
+            };
+
+            const p = presets[presetKey];
+            if (!p) return;
+
+            document.getElementById('sim-width').value = p.w;
+            document.getElementById('sim-height').value = p.h;
+            document.getElementById('sim-fps').value = p.fps;
+            document.getElementById('sim-bit').value = p.bit;
+            document.getElementById('sim-comp').value = p.comp;
+
+            calculateSim();
+        }
+
+        window.onload = function() {
+            generateQuestion('easy');
+            calculateSim();
+
+            // Global Keydown Handler for Enter Key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    if (isAnswerSubmitted) {
+                        event.preventDefault();
+                        nextQuestion();
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>

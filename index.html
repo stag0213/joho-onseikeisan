@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音のデータ量計算マスター 〜高校情報Ⅰ対応〜</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid #3b82f6;
+            color: #1d4ed8;
+            font-weight: 700;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-indigo-600 rounded-lg shadow-inner">
+                    <i class="fa-solid fa-wave-square text-2xl text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-tight">音のデータ量計算マスター</h1>
+                    <p class="text-xs text-indigo-200">高校情報Ⅰ 対応・デジタル化とデータ量インタラクティブ教材</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 text-xs bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-500/40">
+                <i class="fa-solid fa-graduation-cap text-yellow-300"></i>
+                <span>単位換算: <strong class="text-white">1 KB = 1000 Byte</strong> (1024切替対応)</span>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b border-slate-200 text-slate-600 text-sm font-medium">
+            <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto space-x-1 sm:space-x-4 no-scrollbar">
+                <button onclick="switchTab('tab-sim')" id="btn-tab-sim" class="tab-btn active py-3 px-4 flex items-center gap-2 whitespace-nowrap hover:text-indigo-600 transition">
+                    <i class="fa-solid fa-sliders text-indigo-500"></i>
+                    <span>① 計算シミュレーター & 音質体験</span>
+                </button>
+                <button onclick="switchTab('tab-learn')" id="btn-tab-learn" class="tab-btn py-3 px-4 flex items-center gap-2 whitespace-nowrap hover:text-indigo-600 transition">
+                    <i class="fa-solid fa-book-open text-blue-500"></i>
+                    <span>② 基礎解説と公式</span>
+                </button>
+                <button onclick="switchTab('tab-quiz')" id="btn-tab-quiz" class="tab-btn py-3 px-4 flex items-center gap-2 whitespace-nowrap hover:text-indigo-600 transition">
+                    <i class="fa-solid fa-pen-to-square text-emerald-500"></i>
+                    <span>③ 演習問題ドリル</span>
+                </button>
+                <button onclick="switchTab('tab-reverse')" id="btn-tab-reverse" class="tab-btn py-3 px-4 flex items-center gap-2 whitespace-nowrap hover:text-indigo-600 transition">
+                    <i class="fa-solid fa-[#f59e0b] fa-stopwatch text-amber-500"></i>
+                    <span>④ 応用・逆算チャレンジ</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: SIMULATOR & AUDIO PREVIEW           -->
+        <!-- ========================================== -->
+        <section id="tab-sim" class="tab-content block space-y-6">
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-lg flex items-start gap-3">
+                <i class="fa-solid fa-circle-info text-blue-600 text-xl mt-0.5"></i>
+                <div class="text-sm text-blue-900">
+                    <p class="font-bold">使い方</p>
+                    <p>パラメータを変更すると、右側のデータ量計算ステップがリアルタイムに更新されます。「音質を試聴する」ボタンを押すと、設定したサンプリング周波数・量子化ビット数に応じた音質の劣化（ノイズや高音の切れ）を実際に聴くことができます！</p>
+                </div>
+            </div>
+
+            <!-- Presets -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i> 定番プリセット設定</span>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="applyPreset('cd')" class="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 border border-slate-300 rounded-lg text-xs font-semibold transition">
+                        💿 音楽CD (44.1kHz / 16bit / ステレオ)
+                    </button>
+                    <button onclick="applyPreset('hi-res')" class="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 border border-slate-300 rounded-lg text-xs font-semibold transition">
+                        🎧 ハイレゾ音源 (96kHz / 24bit / ステレオ)
+                    </button>
+                    <button onclick="applyPreset('phone')" class="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 border border-slate-300 rounded-lg text-xs font-semibold transition">
+                        📞 固定電話品質 (8kHz / 8bit / モノラル)
+                    </button>
+                    <button onclick="applyPreset('retro')" class="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 border border-slate-300 rounded-lg text-xs font-semibold transition">
+                        👾 レトロゲーム音源 (11.025kHz / 8bit / モノラル)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Control & Result Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Input Controls -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800 border-b pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-600"></i> パラメータ設定
+                    </h2>
+
+                    <!-- Sampling Rate -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                                <span>サンプリング周波数</span>
+                                <span class="text-xs font-normal text-slate-500">(1秒あたりの測定回数)</span>
+                            </label>
+                            <span id="sim-freq-val" class="text-sm font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">44,100 Hz</span>
+                        </div>
+                        <input type="range" id="sim-freq" min="4000" max="96000" step="100" value="44100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updateSim()">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span>4 kHz (超低音質)</span>
+                            <span>44.1 kHz (CD)</span>
+                            <span>96 kHz (ハイレゾ)</span>
+                        </div>
+                    </div>
+
+                    <!-- Quantization Bit Depth -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                                <span>量子化ビット数</span>
+                                <span class="text-xs font-normal text-slate-500">(1回のデータの段階数)</span>
+                            </label>
+                            <span id="sim-bit-val" class="text-sm font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">16 bit</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" onclick="setSimBit(4)" class="bit-btn border p-2 rounded-lg text-xs font-bold text-center hover:border-indigo-500" data-bit="4">4 bit<br><span class="text-[10px] text-slate-400 font-normal">16段階</span></button>
+                            <button type="button" onclick="setSimBit(8)" class="bit-btn border p-2 rounded-lg text-xs font-bold text-center hover:border-indigo-500" data-bit="8">8 bit<br><span class="text-[10px] text-slate-400 font-normal">256段階</span></button>
+                            <button type="button" onclick="setSimBit(16)" class="bit-btn border p-2 rounded-lg text-xs font-bold text-center hover:border-indigo-500 bg-indigo-50 border-indigo-500 text-indigo-700" data-bit="16">16 bit<br><span class="text-[10px] text-slate-400 font-normal">65,536段階</span></button>
+                            <button type="button" onclick="setSimBit(24)" class="bit-btn border p-2 rounded-lg text-xs font-bold text-center hover:border-indigo-500" data-bit="24">24 bit<br><span class="text-[10px] text-slate-400 font-normal">1,677万段階</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Channel Count -->
+                    <div>
+                        <label class="text-sm font-bold text-slate-700 block mb-2">チャンネル数 (マイク・スピーカー数)</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="border rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition border-indigo-500 bg-indigo-50/50" id="label-ch-1">
+                                <input type="radio" name="sim-ch" value="1" onchange="updateSim()" class="accent-indigo-600">
+                                <div>
+                                    <div class="text-xs font-bold text-slate-800">モノラル (1ch)</div>
+                                    <div class="text-[11px] text-slate-500">1系統の音</div>
+                                </div>
+                            </label>
+                            <label class="border rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition border-indigo-500 bg-indigo-50/50" id="label-ch-2">
+                                <input type="radio" name="sim-ch" value="2" checked onchange="updateSim()" class="accent-indigo-600">
+                                <div>
+                                    <div class="text-xs font-bold text-slate-800">ステレオ (2ch)</div>
+                                    <div class="text-[11px] text-slate-500">左右2系統の音</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Time Duration -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-bold text-slate-700">録音時間</label>
+                            <span id="sim-time-val" class="text-sm font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">60 秒 (1分)</span>
+                        </div>
+                        <input type="range" id="sim-time" min="1" max="3600" step="1" value="60" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updateSim()">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span>1秒</span>
+                            <span>1分</span>
+                            <span>10分</span>
+                            <span>60分</span>
+                        </div>
+                    </div>
+
+                    <!-- Audio Preview Section -->
+                    <div class="bg-indigo-900 text-white p-4 rounded-xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wide text-indigo-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-volume-high text-yellow-400"></i> 音質デモ試聴
+                            </span>
+                            <span class="text-[10px] bg-indigo-800 text-indigo-200 px-2 py-0.5 rounded">Web Audio API</span>
+                        </div>
+                        <p class="text-xs text-indigo-200 leading-relaxed">
+                            現在の「サンプリング周波数」と「量子化ビット」の音質の違いを体験できます。
+                        </p>
+                        <div class="flex gap-2">
+                            <button id="btn-play-sound" onclick="playAudioDemo()" class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition shadow-md">
+                                <i class="fa-solid fa-play"></i> 設定した音質で試聴
+                            </button>
+                            <button id="btn-stop-sound" onclick="stopAudioDemo()" disabled class="bg-indigo-800 hover:bg-indigo-700 text-indigo-300 font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1 transition opacity-50 cursor-not-allowed">
+                                <i class="fa-solid fa-square"></i> 停止
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Results & Step-by-Step Calculation -->
+                <div class="lg:col-span-7 space-y-6">
+
+                    <!-- Total Result Card -->
+                    <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-6 rounded-2xl shadow-xl space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs font-semibold text-indigo-200 uppercase tracking-widest">総データ容量 (計算結果)</span>
+                                <div id="res-mb" class="text-3xl sm:text-4xl font-black mt-1 tracking-tight text-yellow-300">
+                                    0 MB
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-indigo-200">ビット単位</span>
+                                <div id="res-bits" class="text-sm font-mono font-bold text-indigo-100">0 bit</div>
+                            </div>
+                        </div>
+
+                        <!-- Unit Breakdown Pill Grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-indigo-500/40">
+                            <div class="bg-indigo-800/60 p-2.5 rounded-lg border border-indigo-400/20">
+                                <div class="text-[10px] text-indigo-300">Byte (バイト)</div>
+                                <div id="res-bytes" class="text-xs font-mono font-bold truncate">0 B</div>
+                            </div>
+                            <div class="bg-indigo-800/60 p-2.5 rounded-lg border border-indigo-400/20">
+                                <div class="text-[10px] text-indigo-300">KB (キロバイト)</div>
+                                <div id="res-kb" class="text-xs font-mono font-bold truncate">0 KB</div>
+                            </div>
+                            <div class="bg-indigo-800/60 p-2.5 rounded-lg border border-indigo-400/20">
+                                <div class="text-[10px] text-indigo-300">MB (メガバイト)</div>
+                                <div id="res-mb-exact" class="text-xs font-mono font-bold truncate">0 MB</div>
+                            </div>
+                            <div class="bg-indigo-800/60 p-2.5 rounded-lg border border-indigo-400/20">
+                                <div class="text-[10px] text-indigo-300">GB (ギガバイト)</div>
+                                <div id="res-gb" class="text-xs font-mono font-bold truncate">0 GB</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculation Steps Display -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b pb-3">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-list-ol text-indigo-600"></i> 計算プロセスの視覚化
+                            </h3>
+                            <div class="flex items-center gap-1 text-xs">
+                                <span class="text-slate-500">換算基準:</span>
+                                <select id="sim-unit-base" onchange="updateSim()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold">
+                                    <option value="1000">1KB = 1000B (10の3乗基準)</option>
+                                    <option value="1024">1KB = 1024B (2の10乗基準)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step 1 -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Step 1: 全データ量(bit)の計算</div>
+                            <div class="text-xs text-slate-600">
+                                公式：<span class="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-300">サンプリング周波数(Hz) × 量子化ビット数(bit) × チャンネル数 × 時間(秒)</span>
+                            </div>
+                            <div id="step1-formula" class="text-sm font-mono font-bold text-slate-800 mt-1 bg-white p-2 rounded border border-indigo-100">
+                                44100 × 16 × 2 × 60 = 84,672,000 bit
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Step 2: Byte (バイト) への変換</div>
+                            <div class="text-xs text-slate-600">
+                                <span class="font-bold text-slate-800">8 bit = 1 Byte</span> なので、全体を <span class="font-bold text-red-600">8</span> で割ります。
+                            </div>
+                            <div id="step2-formula" class="text-sm font-mono font-bold text-slate-800 mt-1 bg-white p-2 rounded border border-indigo-100">
+                                84,672,000 ÷ 8 = 10,584,000 Byte
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Step 3: MB (メガバイト) への単位切り上げ</div>
+                            <div id="step3-desc" class="text-xs text-slate-600">
+                                1,000,000 Byte = 1 MB なので、1,000,000 (1000 × 1000) で割ります。
+                            </div>
+                            <div id="step3-formula" class="text-sm font-mono font-bold text-slate-800 mt-1 bg-white p-2 rounded border border-indigo-100">
+                                10,584,000 ÷ 1,000,000 = 10.584 MB
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: LEARNING & FORMULAS                 -->
+        <!-- ========================================== -->
+        <section id="tab-learn" class="tab-content hidden space-y-8">
+
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 sm:p-8 rounded-3xl shadow-lg">
+                <h2 class="text-2xl sm:text-3xl font-black mb-3"><i class="fa-solid fa-graduation-cap mr-2"></i> 音のデジタル化 3ステップ解説</h2>
+                <p class="text-sm sm:text-base text-blue-100 max-w-3xl leading-relaxed">
+                    アナログな音の波形をコンピュータで扱うデジタルデータ（0と1）に変換することを<strong>A/D変換（アナログ-デジタル変換）</strong>と呼びます。このプロセスは「標本化」「量子化」「符号化」の3段階で行われます。
+                </p>
+            </div>
+
+            <!-- 3 Steps Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Step A -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black text-lg">1</div>
+                        <h3 class="text-lg font-bold text-slate-800">① 標本化 (サンプリング)</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            連続的な音の波を<strong>時間軸に沿って一定間隔で区切り、音の高さを測定</strong>すること。
+                        </p>
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1">
+                            <span class="font-bold text-blue-600">サンプリング周波数 (Hz):</span>
+                            <p class="text-slate-600">1秒間に何回細かく区切るかを表す単位。<br>例：44.1 kHz = 1秒間に 44,100 回測定。</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t text-[11px] text-slate-400">
+                        ※サンプリング周波数が高いほど、元の高音域まで正確に記録できます。
+                    </div>
+                </div>
+
+                <!-- Step B -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black text-lg">2</div>
+                        <h3 class="text-lg font-bold text-slate-800">② 量子化</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            標本化で区切った各点の音の振幅（強さ・大きさ）を、<strong>決められた段階の数値に最も近い値に置き換える</strong>こと。
+                        </p>
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1">
+                            <span class="font-bold text-indigo-600">量子化ビット数 (bit):</span>
+                            <p class="text-slate-600">何ビットの細かさで刻むかを表す。<br>・8 bit = 2<sup>8</sup> = 256段階<br>・16 bit = 2<sup>16</sup> = 65,536段階</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t text-[11px] text-slate-400">
+                        ※ビット数が多いほど細かい音の変化や静かな音もノイズなく表現できます。
+                    </div>
+                </div>
+
+                <!-- Step C -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center font-black text-lg">3</div>
+                        <h3 class="text-lg font-bold text-slate-800">③ 符号化 (コーディング)</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            量子化した数値を<strong>2進数（0と1の組み合わせ）のデジタルデータに変換</strong>して記録すること。
+                        </p>
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1">
+                            <span class="font-bold text-purple-600">チャンネル数:</span>
+                            <p class="text-slate-600">・モノラル (1ch): 単一スピーカー用<br>・ステレオ (2ch): 左右独立のスピーカー用</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t text-[11px] text-slate-400">
+                        ※ステレオ(2ch)はモノラルのちょうど2倍のデータ量になります。
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Formula Reference Card -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <h3 class="text-xl font-black text-slate-800 flex items-center gap-2 border-b pb-4">
+                    <i class="fa-solid fa-calculator text-indigo-600"></i> 音のデータ量計算の基本公式
+                </h3>
+
+                <!-- Formula Highlight Box -->
+                <div class="bg-indigo-50 border-2 border-indigo-200 p-6 rounded-2xl text-center space-y-2">
+                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-widest">非圧縮WAV音源の計算式</span>
+                    <div class="text-base sm:text-2xl font-black text-indigo-950 font-mono">
+                        データ量(bit) = サンプリング周波数(Hz) × 量子化ビット数(bit) × チャンネル数 × 時間(秒)
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <!-- Unit Conversions -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-arrow-right-arrow-left text-emerald-500"></i> 単位変換のルール (必ず暗記しよう)
+                        </h4>
+                        <ul class="text-xs text-slate-700 space-y-2 bg-slate-50 p-4 rounded-xl border">
+                            <li class="flex items-center justify-between">
+                                <span class="font-semibold">bit から Byte (バイト)</span>
+                                <span class="bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded font-bold"> ÷ 8</span>
+                            </li>
+                            <li class="flex items-center justify-between">
+                                <span class="font-semibold">Byte から KB (キロバイト)</span>
+                                <span class="bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded font-bold"> ÷ 1,000 (または ÷ 1024)</span>
+                            </li>
+                            <li class="flex items-center justify-between">
+                                <span class="font-semibold">KB から MB (メガバイト)</span>
+                                <span class="bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded font-bold"> ÷ 1,000 (または ÷ 1024)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Exam Tips -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-lightbulb text-amber-500"></i> 試験でよくあるひっかけ注意点！
+                        </h4>
+                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-900 space-y-1.5 leading-relaxed">
+                            <p><strong>① 周波数の単位 (kHz):</strong> 「44.1 kHz」は <strong>44,100 Hz</strong> に単位を直してから掛け算します。</p>
+                            <p><strong>② 時間の単位 (分):</strong> 「1分間」は <strong>60秒</strong> に直します。「10分」なら 600秒です。</p>
+                            <p><strong>③ 1000 か 1024 か:</strong> 問題文の指示をよく読みましょう。「1KB = 1000B」とあれば1000で割ります。</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: PRACTICE DRILL                      -->
+        <!-- ========================================== -->
+        <section id="tab-quiz" class="tab-content hidden space-y-6">
+
+            <!-- Quiz Header Info -->
+            <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-emerald-600"></i> 計算ドリル（自動生成）
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">レベルを選択して「問題を生成」ボタンを押すとランダムに問題が出題されます。</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-1 text-xs bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                        <span class="text-slate-600 font-bold">換算基準:</span>
+                        <select id="quiz-unit-base" onchange="generateQuizProblem()" class="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="1000">1KB = 1000B (10の3乗基準)</option>
+                            <option value="1024">1KB = 1024B (2の10乗基準)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="setQuizLevel('easy')" id="btn-lvl-easy" class="quiz-lvl-btn px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-500 bg-emerald-50 text-emerald-700">初級 (基礎)</button>
+                        <button onclick="setQuizLevel('mid')" id="btn-lvl-mid" class="quiz-lvl-btn px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 hover:border-emerald-500 text-slate-600">中級 (標準)</button>
+                        <button onclick="setQuizLevel('hard')" id="btn-lvl-hard" class="quiz-lvl-btn px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 hover:border-emerald-500 text-slate-600">上級 (応用)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Card -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-md space-y-6">
+
+                <div class="flex justify-between items-center border-b pb-3">
+                    <span id="quiz-tag" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">初級問題</span>
+                    <div class="text-xs text-slate-500">
+                        連続正解数: <span id="quiz-streak" class="font-bold text-emerald-600">0</span> 回
+                    </div>
+                </div>
+
+                <!-- Question Text -->
+                <div id="quiz-question-text" class="text-base sm:text-lg font-bold text-slate-800 leading-relaxed">
+                    問題を取得中...
+                </div>
+
+                <!-- Answer Input Form -->
+                <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 space-y-4">
+                    <label class="block text-xs font-bold text-slate-700">解答を入力してください:</label>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <input type="number" step="any" id="quiz-user-input" placeholder="数値で入力" class="flex-grow px-4 py-3 rounded-xl border border-slate-300 font-mono text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <span id="quiz-unit-label" class="text-sm font-bold text-slate-700 self-center">MB</span>
+                        <button onclick="checkQuizAnswer()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check"></i> 答え合わせ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="quiz-feedback" class="hidden p-4 rounded-xl border text-sm space-y-3">
+                    <div id="quiz-result-title" class="font-bold text-base flex items-center gap-2"></div>
+                    <div id="quiz-explanation" class="text-xs sm:text-sm leading-relaxed space-y-2 font-mono"></div>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="flex justify-between items-center pt-2">
+                    <button onclick="toggleHint()" class="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1">
+                        <i class="fa-regular fa-lightbulb"></i> ヒントを表示
+                    </button>
+                    <button onclick="generateQuizProblem()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> 次の問題を出す
+                    </button>
+                </div>
+
+                <!-- Hint Popup Box -->
+                <div id="quiz-hint-box" class="hidden bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-xs space-y-1">
+                    <span class="font-bold block">💡 解き方のヒント</span>
+                    <p id="quiz-hint-text">1. まず（Hz）×（bit）×（ch）×（秒）を計算しよう！</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: REVERSE CALCULATION / APPLICATION    -->
+        <!-- ========================================== -->
+        <section id="tab-reverse" class="tab-content hidden space-y-6">
+
+            <div class="bg-amber-500 text-slate-900 p-6 sm:p-8 rounded-3xl shadow-lg space-y-2">
+                <h2 class="text-2xl font-black flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-slate-900"></i> 応用：録音可能時間の逆算チャレンジ
+                </h2>
+                <p class="text-xs sm:text-sm text-amber-950 max-w-3xl leading-relaxed">
+                    「記憶メディアの空き容量」と「音質設定」から、<strong>合計で最大何分間の音声が録音できるか</strong>を逆算する実用的なシミュレーションです。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Controls -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                    <h3 class="font-bold text-slate-800 border-b pb-3">条件の設定</h3>
+
+                    <!-- Storage Capacity Input -->
+                    <div>
+                        <label class="text-xs font-bold text-slate-700 block mb-1">メディアの空き容量</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="rev-capacity" value="700" class="w-full px-3 py-2 border rounded-lg font-mono text-sm font-bold">
+                            <select id="rev-cap-unit" class="bg-slate-100 border rounded-lg px-3 text-xs font-bold">
+                                <option value="MB">MB</option>
+                                <option value="GB">GB</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Presets for Storage -->
+                    <div class="flex flex-wrap gap-1.5 text-xs">
+                        <button onclick="setCapPreset(700, 'MB')" class="px-2.5 py-1 bg-slate-100 border rounded text-[11px] font-semibold">CD-ROM (700MB)</button>
+                        <button onclick="setCapPreset(25MB, 'MB')" class="px-2.5 py-1 bg-slate-100 border rounded text-[11px] font-semibold">メール添付 (25MB)</button>
+                        <button onclick="setCapPreset(1, 'GB')" class="px-2.5 py-1 bg-slate-100 border rounded text-[11px] font-semibold">SDカード (1GB)</button>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- Audio Setting for Reverse -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-700">サンプリング周波数</label>
+                            <select id="rev-freq" class="w-full mt-1 px-3 py-2 border rounded-lg text-xs font-bold">
+                                <option value="44100">44.1 kHz (CD品質)</option>
+                                <option value="48000">48.0 kHz (DVD/動画音声)</option>
+                                <option value="22050">22.05 kHz (標準ラジオ)</option>
+                                <option value="8000">8.0 kHz (電話品質)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-slate-700">量子化ビット数</label>
+                            <select id="rev-bit" class="w-full mt-1 px-3 py-2 border rounded-lg text-xs font-bold">
+                                <option value="16">16 bit</option>
+                                <option value="24">24 bit</option>
+                                <option value="8">8 bit</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-slate-700">チャンネル数</label>
+                            <select id="rev-ch" class="w-full mt-1 px-3 py-2 border rounded-lg text-xs font-bold">
+                                <option value="2">ステレオ (2ch)</option>
+                                <option value="1">モノラル (1ch)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="calcReverseTime()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-xl transition shadow-sm text-xs">
+                        <i class="fa-solid fa-calculator"></i> 録音可能時間を計算する
+                    </button>
+                </div>
+
+                <!-- Result Box -->
+                <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">最大録音可能時間</span>
+                        
+                        <div class="bg-amber-50 border border-amber-200 p-6 rounded-2xl space-y-2 text-center">
+                            <div id="rev-time-main" class="text-3xl sm:text-4xl font-black text-amber-950 font-mono">
+                                00 分 00 秒
+                            </div>
+                            <div id="rev-time-hours" class="text-xs font-bold text-amber-800">
+                                (約 0 時間 0 分)
+                            </div>
+                        </div>
+
+                        <!-- Reverse Steps Explanation -->
+                        <div class="space-y-2 pt-2">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase">逆算の計算ステップ</h4>
+                            <div id="rev-explanation-box" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs font-mono space-y-2 text-slate-700">
+                                計算ボタンを押すとステップが表示されます。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-xs text-indigo-900 leading-relaxed">
+                        <span class="font-bold"><i class="fa-solid fa-lightbulb text-amber-500"></i> ポイント:</span>
+                        容量制限がある中で長時間録音したい場合は、サンプリング周波数やビット数を下げるか、モノラル(1ch)にすることでデータ量を削減できます。
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 text-xs py-6 mt-12 border-t border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p>高校情報Ⅰ 音のデジタル化・データ量計算シミュレーター 教材アプリ</p>
+            <p class="text-slate-500">※本ツールは非圧縮(WAV形式等)の音声データ量を前提に計算しています。</p>
+        </div>
+    </footer>
+
+    <script>
+        /* ========================================== */
+        /* GLOBAL STATE & TAB SWITCHING               */
+        /* ========================================== */
+        let currentSimBit = 16;
+        let audioCtx = null;
+        let isAudioPlaying = false;
+        let currentOsc = null;
+        let currentGain = null;
+        let scriptNode = null;
+
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('active');
+
+            // Stop audio if playing when switching
+            stopAudioDemo();
+        }
+
+        /* ========================================== */
+        /* SIMULATOR LOGIC                            */
+        /* ========================================== */
+        function setSimBit(bit) {
+            currentSimBit = bit;
+            document.querySelectorAll('.bit-btn').forEach(btn => {
+                if (parseInt(btn.getAttribute('data-bit')) === bit) {
+                    btn.classList.add('bg-indigo-50', 'border-indigo-500', 'text-indigo-700');
+                } else {
+                    btn.classList.remove('bg-indigo-50', 'border-indigo-500', 'text-indigo-700');
+                }
+            });
+            updateSim();
+        }
+
+        function applyPreset(type) {
+            const freqInput = document.getElementById('sim-freq');
+            const timeInput = document.getElementById('sim-time');
+            const chInputs = document.getElementsByName('sim-ch');
+
+            if (type === 'cd') {
+                freqInput.value = 44100;
+                setSimBit(16);
+                chInputs[1].checked = true; // stereo
+                timeInput.value = 60;
+            } else if (type === 'hi-res') {
+                freqInput.value = 96000;
+                setSimBit(24);
+                chInputs[1].checked = true;
+                timeInput.value = 60;
+            } else if (type === 'phone') {
+                freqInput.value = 8000;
+                setSimBit(8);
+                chInputs[0].checked = true; // mono
+                timeInput.value = 60;
+            } else if (type === 'retro') {
+                freqInput.value = 11025;
+                setSimBit(8);
+                chInputs[0].checked = true;
+                timeInput.value = 60;
+            }
+            updateSim();
+        }
+
+        function updateSim() {
+            const freq = parseInt(document.getElementById('sim-freq').value);
+            const bit = currentSimBit;
+            const ch = parseInt(document.querySelector('input[name="sim-ch"]:checked').value);
+            const sec = parseInt(document.getElementById('sim-time').value);
+            const baseUnit = parseInt(document.getElementById('sim-unit-base').value);
+
+            // Display Labels
+            document.getElementById('sim-freq-val').innerText = freq.toLocaleString() + ' Hz';
+            document.getElementById('sim-bit-val').innerText = bit + ' bit';
+            
+            let timeStr = sec + ' 秒';
+            if (sec >= 60) {
+                const min = Math.floor(sec / 60);
+                const remSec = sec % 60;
+                timeStr = `${sec} 秒 (${min}分${remSec > 0 ? remSec + '秒' : ''})`;
+            }
+            document.getElementById('sim-time-val').innerText = timeStr;
+
+            // Calculations
+            // Step 1: Total bits
+            const totalBits = freq * bit * ch * sec;
+
+            // Step 2: Total Bytes
+            const totalBytes = totalBits / 8;
+
+            // Step 3: KB, MB, GB
+            const totalKB = totalBytes / baseUnit;
+            const totalMB = totalKB / baseUnit;
+            const totalGB = totalMB / baseUnit;
+
+            // UI Render Main Cards
+            document.getElementById('res-mb').innerText = formatDecimal(totalMB) + ' MB';
+            document.getElementById('res-bits').innerText = totalBits.toLocaleString() + ' bit';
+            document.getElementById('res-bytes').innerText = totalBytes.toLocaleString() + ' B';
+            document.getElementById('res-kb').innerText = formatDecimal(totalKB) + ' KB';
+            document.getElementById('res-mb-exact').innerText = formatDecimal(totalMB) + ' MB';
+            document.getElementById('res-gb').innerText = formatDecimal(totalGB, 4) + ' GB';
+
+            // Step-by-Step text render
+            document.getElementById('step1-formula').innerText = 
+                `${freq.toLocaleString()} Hz × ${bit} bit × ${ch}ch × ${sec}秒 = ${totalBits.toLocaleString()} bit`;
+
+            document.getElementById('step2-formula').innerText = 
+                `${totalBits.toLocaleString()} bit ÷ 8 = ${totalBytes.toLocaleString()} Byte`;
+
+            if (baseUnit === 1000) {
+                document.getElementById('step3-desc').innerText = 
+                    '1,000,000 Byte = 1 MB なので、1,000,000 (1000 × 1000) で割ります。';
+                document.getElementById('step3-formula').innerText = 
+                    `${totalBytes.toLocaleString()} ÷ 1,000,000 = ${formatDecimal(totalMB)} MB`;
+            } else {
+                document.getElementById('step3-desc').innerText = 
+                    '1 KiB = 1024 Byte, 1 MiB = 1024 KiB なので、(1024 × 1024 = 1,048,576) で割ります。';
+                document.getElementById('step3-formula').innerText = 
+                    `${totalBytes.toLocaleString()} ÷ 1,048,576 = ${formatDecimal(totalMB)} MB`;
+            }
+        }
+
+        function formatDecimal(num, decimals = 3) {
+            if (num < 0.001 && num > 0) return num.toFixed(decimals);
+            return (Math.round(num * 1000) / 1000).toLocaleString(undefined, {
+                maximumFractionDigits: decimals
+            });
+        }
+
+        /* ========================================== */
+        /* AUDIO PREVIEW SIMULATION (WEB AUDIO API)    */
+        /* ========================================== */
+        function playAudioDemo() {
+            stopAudioDemo();
+
+            const targetFreq = parseInt(document.getElementById('sim-freq').value);
+            const targetBit = currentSimBit;
+
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+                // 1. Synthesize a melody sound (Combination of rich synth harmonics)
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
+
+                // Vibrato
+                const lfo = audioCtx.createOscillator();
+                lfo.frequency.value = 5;
+                const lfoGain = audioCtx.createGain();
+                lfoGain.gain.value = 10;
+                lfo.connect(osc.frequency);
+                lfo.start();
+
+                // 2. Lowpass Filter to simulate Nyquist Cutoff Frequency (f_s / 2)
+                const nyquistCutoff = Math.min(targetFreq / 2, 20000);
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(nyquistCutoff, audioCtx.currentTime);
+
+                // 3. Custom Bitcrusher Node to simulate Quantization Bit Depth
+                const bufferSize = 4096;
+                scriptNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+                
+                const stepCount = Math.pow(2, targetBit); // e.g. 256 for 8bit
+                
+                scriptNode.onaudioprocess = function(e) {
+                    const input = e.inputBuffer.getChannelData(0);
+                    const output = e.outputBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        // Quantization formula
+                        let sample = input[i];
+                        // scale [-1, 1] to [0, 1]
+                        sample = (sample + 1) / 2;
+                        // quantize step
+                        sample = Math.floor(sample * stepCount) / stepCount;
+                        // scale back to [-1, 1]
+                        output[i] = (sample * 2) - 1;
+                    }
+                };
+
+                // Master Gain
+                const masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0.15, audioCtx.currentTime); // keep volume gentle
+
+                // Connect nodes
+                osc.connect(filter);
+                filter.connect(scriptNode);
+                scriptNode.connect(masterGain);
+                masterGain.connect(audioCtx.destination);
+
+                osc.start();
+                currentOsc = osc;
+
+                isAudioPlaying = true;
+                document.getElementById('btn-play-sound').disabled = true;
+                document.getElementById('btn-play-sound').classList.add('opacity-50');
+                
+                const stopBtn = document.getElementById('btn-stop-sound');
+                stopBtn.disabled = false;
+                stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            } catch (err) {
+                console.error("Audio Web API Error:", err);
+                alert("ブラウザの音声再生機能の初期化に失敗しました。");
+            }
+        }
+
+        function stopAudioDemo() {
+            if (currentOsc) {
+                try { currentOsc.stop(); } catch(e){}
+                currentOsc = null;
+            }
+            if (audioCtx) {
+                try { audioCtx.close(); } catch(e){}
+                audioCtx = null;
+            }
+            isAudioPlaying = false;
+
+            const playBtn = document.getElementById('btn-play-sound');
+            if (playBtn) {
+                playBtn.disabled = false;
+                playBtn.classList.remove('opacity-50');
+            }
+
+            const stopBtn = document.getElementById('btn-stop-sound');
+            if (stopBtn) {
+                stopBtn.disabled = true;
+                stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        /* ========================================== */
+        /* PRACTICE QUIZ ENGINE                       */
+        /* ========================================== */
+        let currentQuizLevel = 'easy';
+        let currentQuizProblem = null;
+        let streakCount = 0;
+
+        function setQuizLevel(level) {
+            currentQuizLevel = level;
+            document.querySelectorAll('.quiz-lvl-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+                btn.classList.add('border-slate-300', 'text-slate-600');
+            });
+            const activeBtn = document.getElementById('btn-lvl-' + level);
+            activeBtn.classList.remove('border-slate-300', 'text-slate-600');
+            activeBtn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+
+            generateQuizProblem();
+        }
+
+        function generateQuizProblem() {
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('quiz-hint-box').classList.add('hidden');
+            document.getElementById('quiz-user-input').value = '';
+
+            const baseUnit = parseInt(document.getElementById('quiz-unit-base').value) || 1000;
+
+            let freq, bit, ch, sec, askUnit, tagText;
+
+            if (currentQuizLevel === 'easy') {
+                tagText = '初級 (全項目指定・Byte/KB計算)';
+                freq = [8000, 10000, 44100][Math.floor(Math.random() * 3)];
+                bit = [8, 16][Math.floor(Math.random() * 2)];
+                ch = 1; // mono
+                sec = [1, 2, 5, 10, 20][Math.floor(Math.random() * 5)];
+                askUnit = Math.random() > 0.5 ? 'Byte' : 'KB';
+            } else if (currentQuizLevel === 'mid') {
+                tagText = '中級 (kHz・分単位・ステレオ混合)';
+                freq = [22050, 44100, 48000][Math.floor(Math.random() * 3)];
+                bit = 16;
+                ch = [1, 2][Math.floor(Math.random() * 2)];
+                sec = [30, 60, 120, 300][Math.floor(Math.random() * 4)];
+                askUnit = 'MB';
+            } else { // hard
+                tagText = '上級 (ハイレゾ・長尺録音・小数切り捨て)';
+                freq = [44100, 48000, 96000][Math.floor(Math.random() * 3)];
+                bit = [16, 24][Math.floor(Math.random() * 2)];
+                ch = 2;
+                sec = [60, 180, 600, 1200][Math.floor(Math.random() * 4)];
+                askUnit = 'MB';
+            }
+
+            // Correct Answer Calculation
+            const totalBits = freq * bit * ch * sec;
+            const totalBytes = totalBits / 8;
+            let targetAns = totalBytes;
+
+            if (askUnit === 'KB') {
+                targetAns = totalBytes / baseUnit;
+            } else if (askUnit === 'MB') {
+                targetAns = totalBytes / (baseUnit * baseUnit);
+            }
+
+            // Round answer to 3 decimal places max for comparison
+            targetAns = Math.round(targetAns * 1000) / 1000;
+
+            const freqKHz = freq / 1000;
+            const minText = sec >= 60 ? ` (${sec / 60}分間)` : '';
+            const conditionText = baseUnit === 1000 
+                ? '1 KB = 1000 Byte, 1 MB = 1000 KB とする。' 
+                : '1 KB = 1024 Byte, 1 MB = 1024 KB とする。';
+
+            let qText = `サンプリング周波数 <strong>${freq >= 1000 ? freqKHz + ' kHz' : freq + ' Hz'}</strong>、量子化ビット数 <strong>${bit} bit</strong>、<strong>${ch === 1 ? 'モノラル (1ch)' : 'ステレオ (2ch)'}</strong> で <strong>${sec}秒間${minText}</strong> 録音した音声データの容量は何 <strong>${askUnit}</strong> になるか求めよ。<br><span class="text-xs font-normal text-slate-500">※条件: ${conditionText}</span>`;
+
+            currentQuizProblem = {
+                freq, bit, ch, sec, askUnit, targetAns, totalBits, totalBytes, baseUnit
+            };
+
+            document.getElementById('quiz-tag').innerText = tagText;
+            document.getElementById('quiz-question-text').innerHTML = qText;
+            document.getElementById('quiz-unit-label').innerText = askUnit;
+        }
+
+        function checkQuizAnswer() {
+            if (!currentQuizProblem) return;
+
+            const userVal = parseFloat(document.getElementById('quiz-user-input').value);
+            const feedbackEl = document.getElementById('quiz-feedback');
+            const titleEl = document.getElementById('quiz-result-title');
+            const expEl = document.getElementById('quiz-explanation');
+
+            if (isNaN(userVal)) {
+                alert("回答数値を入力してください。");
+                return;
+            }
+
+            feedbackEl.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'bg-emerald-50', 'border-emerald-200');
+
+            const diff = Math.abs(userVal - currentQuizProblem.targetAns);
+            const isCorrect = diff < 0.01; // Allow minor float rounding error
+
+            if (isCorrect) {
+                streakCount++;
+                feedbackEl.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
+                titleEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-xl"></i> 正解です！ お見事！`;
+            } else {
+                streakCount = 0;
+                feedbackEl.classList.add('bg-red-50', 'border-red-200', 'text-red-900');
+                titleEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 text-xl"></i> 残念、不正解です。 (正解: ${currentQuizProblem.targetAns} ${currentQuizProblem.askUnit})`;
+            }
+
+            document.getElementById('quiz-streak').innerText = streakCount;
+
+            // Explanation construction
+            const p = currentQuizProblem;
+            const b = p.baseUnit;
+            let expHTML = `
+                <div class="font-bold border-b pb-1 mb-2">【詳しい解説手順】</div>
+                <div>1. ビット数の計算: ${p.freq.toLocaleString()} Hz × ${p.bit} bit × ${p.ch}ch × ${p.sec}秒 = <strong>${p.totalBits.toLocaleString()} bit</strong></div>
+                <div>2. バイト数への換算: ${p.totalBits.toLocaleString()} ÷ 8 = <strong>${p.totalBytes.toLocaleString()} Byte</strong></div>
+            `;
+
+            if (p.askUnit === 'KB') {
+                expHTML += `<div>3. KBへの換算: ${p.totalBytes.toLocaleString()} ÷ ${b.toLocaleString()} = <strong>${p.targetAns} KB</strong></div>`;
+            } else if (p.askUnit === 'MB') {
+                const mbDivisor = b * b;
+                expHTML += `<div>3. MBへの換算: ${p.totalBytes.toLocaleString()} ÷ ${mbDivisor.toLocaleString()} (${b}×${b}) = <strong>${p.targetAns} MB</strong></div>`;
+            }
+
+            expEl.innerHTML = expHTML;
+        }
+
+        function toggleHint() {
+            const hintBox = document.getElementById('quiz-hint-box');
+            if (hintBox.classList.contains('hidden')) {
+                if (currentQuizProblem) {
+                    const b = currentQuizProblem.baseUnit;
+                    document.getElementById('quiz-hint-text').innerText = 
+                        `1. kHzや分は先に基本単位 (Hz, 秒) に直そう！ (${currentQuizProblem.freq} Hz, ${currentQuizProblem.sec} 秒)\n` +
+                        `2. 公式: ${currentQuizProblem.freq} × ${currentQuizProblem.bit} × ${currentQuizProblem.ch} × ${currentQuizProblem.sec} を計算後、8で割るとByteになります。\n` +
+                        `3. 単位換算: 現在の条件では 1KB = ${b} Byte として計算します。`;
+                }
+                hintBox.classList.remove('hidden');
+            } else {
+                hintBox.classList.add('hidden');
+            }
+        }
+
+        /* ========================================== */
+        /* REVERSE CALCULATION ENGINE                 */
+        /* ========================================== */
+        function setCapPreset(val, unit) {
+            document.getElementById('rev-capacity').value = val;
+            document.getElementById('rev-cap-unit').value = unit;
+            calcReverseTime();
+        }
+
+        function calcReverseTime() {
+            const capVal = parseFloat(document.getElementById('rev-capacity').value);
+            const unit = document.getElementById('rev-cap-unit').value;
+            const freq = parseInt(document.getElementById('rev-freq').value);
+            const bit = parseInt(document.getElementById('rev-bit').value);
+            const ch = parseInt(document.getElementById('rev-ch').value);
+
+            if (isNaN(capVal) || capVal <= 0) {
+                alert("正しい容量を入力してください。");
+                return;
+            }
+
+            // Convert Capacity to Bytes (1KB=1000B standard)
+            let capacityBytes = capVal * 1000 * 1000; // MB to Bytes
+            if (unit === 'GB') {
+                capacityBytes = capVal * 1000 * 1000 * 1000;
+            }
+
+            const capacityBits = capacityBytes * 8;
+
+            // Bits required per second = freq * bit * ch
+            const bitsPerSec = freq * bit * ch;
+
+            // Total max seconds
+            const maxSeconds = capacityBits / bitsPerSec;
+
+            // Format minutes and seconds
+            const totalMin = Math.floor(maxSeconds / 60);
+            const remSec = Math.floor(maxSeconds % 60);
+            const hours = (totalMin / 60).toFixed(1);
+
+            document.getElementById('rev-time-main').innerText = `${totalMin.toLocaleString()} 分 ${remSec} 秒`;
+            document.getElementById('rev-time-hours').innerText = `(約 ${hours} 時間 / 全 ${Math.floor(maxSeconds).toLocaleString()} 秒)`;
+
+            // Explanation step text
+            const expText = 
+                `1. 空き容量 ${capVal}${unit} = ${capacityBytes.toLocaleString()} Byte (${capacityBits.toLocaleString()} bit)\n` +
+                `2. 1秒あたりのデータ量 = ${freq.toLocaleString()} Hz × ${bit} bit × ${ch}ch = ${bitsPerSec.toLocaleString()} bit/秒\n` +
+                `3. 最大秒数 = ${capacityBits.toLocaleString()} ÷ ${bitsPerSec.toLocaleString()} ≈ ${Math.floor(maxSeconds).toLocaleString()} 秒\n` +
+                `4. 時間換算 = ${totalMin} 分 ${remSec} 秒`;
+
+            document.getElementById('rev-explanation-box').innerText = expText;
+        }
+
+        /* ========================================== */
+        /* INITIALIZATION                             */
+        /* ========================================== */
+        window.onload = function() {
+            updateSim();
+            generateQuizProblem();
+            calcReverseTime();
+        };
+    </script>
+</body>
+</html>
